@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MapPin, ArrowRight, Check, Map as MapIcon } from 'lucide-react';
 import { Region } from '../App';
-import { Logo } from './Logo';
+import axios from 'axios';
 
 interface RegionSelectProps {
   onRegionSelect: (region: Region) => void;
@@ -13,36 +13,59 @@ type CityType = 'suwon' | 'seoul';
 export function RegionSelect({ onRegionSelect, userName }: RegionSelectProps) {
   const [activeCity, setActiveCity] = useState<CityType>('suwon');
   const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
-  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
 
-  // 도시별 구 데이터
-  const regionData: Record<CityType, { id: string; city: string; district: string }[]> = {
+  // 1. regionData에 dbId(백엔드 PK) 추가
+  const regionData: Record<CityType, Region[]> = {
     suwon: [
-      { id: 'suwon-jangan', city: '수원시', district: '장안구' },
-      { id: 'suwon-paldal', city: '수원시', district: '팔달구' },
-      { id: 'suwon-gwonseon', city: '수원시', district: '권선구' },
-      { id: 'suwon-yeongtong', city: '수원시', district: '영통구' },
+      { id: 'suwon-jangan', dbId: 4, city: '수원시', district: '장안구' },
+      { id: 'suwon-paldal', dbId: 1, city: '수원시', district: '팔달구' },
+      { id: 'suwon-gwonseon', dbId: 2, city: '수원시', district: '권선구' },
+      { id: 'suwon-yeongtong', dbId: 3, city: '수원시', district: '영통구' },
     ],
     seoul: [
-      { id: 'seoul-gangnam', city: '서울특별시', district: '강남구' },
-      { id: 'seoul-seocho', city: '서울특별시', district: '서초구' },
-      { id: 'seoul-songpa', city: '서울특별시', district: '송파구' },
-      { id: 'seoul-mapo', city: '서울특별시', district: '마포구' },
-      { id: 'seoul-yongsan', city: '서울특별시', district: '용산구' },
+      { id: 'seoul-gangnam', dbId: 5, city: '서울특별시', district: '강남구' },
+      { id: 'seoul-seocho', dbId: 6, city: '서울특별시', district: '서초구' },
+      { id: 'seoul-songpa', dbId: 7, city: '서울특별시', district: '송파구' },
+      { id: 'seoul-mapo', dbId: 8, city: '서울특별시', district: '마포구' },
+      { id: 'seoul-yongsan', dbId: 9, city: '서울특별시', district: '용산구' },
     ]
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    // 모든 지역 데이터에서 현재 선택된 id와 일치하는 객체 찾기
     const allRegions = [...regionData.suwon, ...regionData.seoul];
     const region = allRegions.find(r => r.id === selectedRegionId);
+    
     if (region) {
-      onRegionSelect(region);
+      // ⚠️ dbId가 있는지 다시 한 번 확인 (디버깅용)
+      console.log("백엔드로 보낼 지역 정보:", region);
+
+      try {
+        const token = localStorage.getItem('accessToken');
+        
+        // 백엔드 저장 로직
+        await axios.post('http://localhost:8080/api/user/region', {
+          city: region.city,
+          district: region.district
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        // 2. 부모(App.tsx)에게 dbId가 포함된 전체 객체 전달
+        onRegionSelect(region);
+        
+      } catch (err: any) {
+        console.error("지역 저장 실패:", err);
+        alert("지역 정보를 저장하는 중 오류가 발생했습니다.");
+      }
     }
   };
 
   const handleCityChange = (city: CityType) => {
     setActiveCity(city);
-    setSelectedRegionId(null); // 도시 변경 시 선택 초기화
+    setSelectedRegionId(null);
   };
 
   return (
@@ -53,6 +76,7 @@ export function RegionSelect({ onRegionSelect, userName }: RegionSelectProps) {
             <MapIcon className="text-green-600" />
           </div>
           <h2 className="text-3xl font-bold text-gray-900">지역을 선택해주세요</h2>
+          {userName && <p className="text-gray-500 mt-2">{userName}님, 반갑습니다!</p>}
         </div>
 
         {/* 도시 선택 탭 */}
@@ -76,20 +100,19 @@ export function RegionSelect({ onRegionSelect, userName }: RegionSelectProps) {
           {/* 지도 영역 */}
           <div className="lg:col-span-3 bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-white min-h-[450px] flex items-center">
             {activeCity === 'suwon' ? (
-              // 수원 SVG (기존 코드 유지)
               <svg viewBox="0 0 500 400" className="w-full h-full drop-shadow-md">
                 <path d="M180,40 L340,50 L380,120 L320,180 L220,180 L160,130 Z" 
                   fill={selectedRegionId === 'suwon-jangan' ? '#047857' : '#10B981'}
-                  className="cursor-pointer stroke-white stroke-[2]" onClick={() => setSelectedRegionId('suwon-jangan')} />
+                  className="cursor-pointer stroke-white stroke-[2] transition-colors" onClick={() => setSelectedRegionId('suwon-jangan')} />
                 <path d="M220,180 L320,180 L360,240 L300,280 L240,260 Z" 
                   fill={selectedRegionId === 'suwon-paldal' ? '#059669' : '#34D399'}
-                  className="cursor-pointer stroke-white stroke-[2]" onClick={() => setSelectedRegionId('suwon-paldal')} />
+                  className="cursor-pointer stroke-white stroke-[2] transition-colors" onClick={() => setSelectedRegionId('suwon-paldal')} />
                 <path d="M160,130 L220,180 L240,260 L300,280 L260,370 L100,360 L60,250 L80,160 Z" 
                   fill={selectedRegionId === 'suwon-gwonseon' ? '#065F46' : '#6EE7B7'}
-                  className="cursor-pointer stroke-white stroke-[2]" onClick={() => setSelectedRegionId('suwon-gwonseon')} />
+                  className="cursor-pointer stroke-white stroke-[2] transition-colors" onClick={() => setSelectedRegionId('suwon-gwonseon')} />
                 <path d="M320,180 L380,120 L450,180 L430,320 L350,340 L300,280 L360,240 Z" 
                   fill={selectedRegionId === 'suwon-yeongtong' ? '#10B981' : '#A7F3D0'}
-                  className="cursor-pointer stroke-white stroke-[2]" onClick={() => setSelectedRegionId('suwon-yeongtong')} />
+                  className="cursor-pointer stroke-white stroke-[2] transition-colors" onClick={() => setSelectedRegionId('suwon-yeongtong')} />
                 <g fill="white" fontWeight="700" fontSize="14" className="pointer-events-none text-center">
                   <text x="260" y="110" textAnchor="middle">장안구</text>
                   <text x="300" y="230" textAnchor="middle">팔달구</text>
@@ -98,19 +121,13 @@ export function RegionSelect({ onRegionSelect, userName }: RegionSelectProps) {
                 </g>
               </svg>
             ) : (
-              // 서울 SVG (간소화된 예시 지형)
               <svg viewBox="0 0 500 400" className="w-full h-full drop-shadow-md">
-                {/* 강북 지역 */}
                 <circle cx="200" cy="150" r="60" fill={selectedRegionId === 'seoul-mapo' ? '#047857' : '#10B981'} 
-                  className="cursor-pointer" onClick={() => setSelectedRegionId('seoul-mapo')} />
+                  className="cursor-pointer transition-colors" onClick={() => setSelectedRegionId('seoul-mapo')} />
                 <text x="200" y="155" textAnchor="middle" fill="white" fontWeight="700">마포/용산</text>
-                
-                {/* 강남 지역 */}
                 <rect x="250" y="220" width="120" height="80" rx="20" fill={selectedRegionId === 'seoul-gangnam' ? '#059669' : '#34D399'} 
-                  className="cursor-pointer" onClick={() => setSelectedRegionId('seoul-gangnam')} />
+                  className="cursor-pointer transition-colors" onClick={() => setSelectedRegionId('seoul-gangnam')} />
                 <text x="310" y="265" textAnchor="middle" fill="white" fontWeight="700">강남/서초</text>
-                
-                <text x="250" y="50" textAnchor="middle" fill="#065F46" className="text-sm font-bold opacity-50">서울 지도는 준비 중입니다 (예시)</text>
               </svg>
             )}
           </div>
@@ -140,7 +157,7 @@ export function RegionSelect({ onRegionSelect, userName }: RegionSelectProps) {
               onClick={handleConfirm}
               disabled={!selectedRegionId}
               className={`w-full py-5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 mt-6 ${
-                selectedRegionId ? 'bg-gray-900 text-white shadow-xl' : 'bg-gray-200 text-gray-400'
+                selectedRegionId ? 'bg-gray-900 text-white shadow-xl hover:bg-black' : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
               선택 완료 <ArrowRight size={20} />
