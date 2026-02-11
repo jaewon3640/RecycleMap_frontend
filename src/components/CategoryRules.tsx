@@ -8,7 +8,7 @@ interface CategoryRulesProps {
   region: Region;
   category: Category;
   onBack: () => void;
-  // ⭐ 수정: 이름뿐만 아니라 ID도 함께 받도록 변경
+  // ⭐ 핵심 수정: trashDetailId(숫자)와 itemName(문자열)을 모두 받도록 정의
   onFeedback: (trashDetailId: number, itemName: string) => void;
 }
 
@@ -17,18 +17,20 @@ export function CategoryRules({ region, category, onBack, onFeedback }: Category
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // 1. 방어 코드: 지역 ID가 없으면 실행하지 않음
     if (!region.dbId) {
-      console.error("Region DB ID가 없습니다!");
+      console.error("Region DB ID가 없습니다! 지역 선택 상태를 확인하세요.");
       return;
     }
 
     const fetchTrashDetails = async () => {
       setIsLoading(true);
       try {
+        // 2. 백엔드 API 호출 (지역 ID와 카테고리 Enum 값 전달)
         const response = await axios.get('http://localhost:8080/api/trash-detail/all-trash', {
           params: {
             regionId: region.dbId,
-            category: category.id.toUpperCase()
+            category: category.id.toUpperCase() // Enum 대문자 규격 준수
           }
         });
         setItems(response.data);
@@ -40,10 +42,11 @@ export function CategoryRules({ region, category, onBack, onFeedback }: Category
     };
 
     fetchTrashDetails();
-  }, [category.id, region.dbId]); // region.id 대신 DB 실제 PK인 dbId를 의존성에 추가
+  }, [category.id, region.dbId]); // 의존성 배열에 dbId를 넣어 지역 변경 시에도 대응
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* --- 상단 헤더 영역 --- */}
       <div className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <button
@@ -66,7 +69,10 @@ export function CategoryRules({ region, category, onBack, onFeedback }: Category
         </div>
       </div>
 
+      {/* --- 본문 콘텐츠 영역 --- */}
       <div className="max-w-4xl mx-auto px-4 py-8">
+        
+        {/* 공통 주의사항 안내 섹션 */}
         <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
           <div className="flex gap-3">
             <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -83,6 +89,7 @@ export function CategoryRules({ region, category, onBack, onFeedback }: Category
           </div>
         </div>
 
+        {/* 품목 리스트 섹션 */}
         <div>
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             주요 품목 
@@ -103,13 +110,12 @@ export function CategoryRules({ region, category, onBack, onFeedback }: Category
                   key={item.id}
                   regionId={region.dbId} 
                   item={{
-                    // ⭐ 중요: item 객체 전체를 넘겨야 ItemCard 내부에서 item.id를 쓸 수 있습니다.
-                    ...item,
+                    ...item, // ⭐ item.id를 포함한 전체 데이터를 ItemCard로 전달
                     name: item.itemName,
                     category: category.id.toUpperCase() 
                   }}
-                  // ⭐ 수정: item.id(DB PK)를 함께 넘겨줍니다.
-                  onFeedback={() => onFeedback(item.id, item.itemName)}
+                  // ⭐ 핵심: ItemCard가 보내준 id와 현재 item의 itemName을 상위(App)로 전달
+                  onFeedback={(id: number) => onFeedback(id, item.itemName)}
                 />
               ))}
             </div>

@@ -2,58 +2,54 @@ import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, AlertTriangle, Calendar, Flag } from 'lucide-react';
 import axios from 'axios';
 
-export function ItemCard({ item, regionId, onFeedback }: any) {
+// Props 타입 정의 (any 대신 인터페이스 권장)
+interface ItemCardProps {
+  item: {
+    id: number;
+    itemName: string;
+    category: string;
+    method?: string;
+    disposal_method?: string;
+    caution?: string;
+  };
+  regionId: number;
+  onFeedback: (id: number) => void;
+}
+
+export function ItemCard({ item, regionId, onFeedback }: ItemCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [schedule, setSchedule] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  const splitData = (text: string) => {
+  const splitData = (text: string | undefined) => {
     if (!text) return [];
     return text.split('|').map(s => s.trim()).filter(s => s !== "");
   };
 
   useEffect(() => {
-  // 1. 카드가 열릴 때마다 무조건 로그를 찍어봅니다.
-  console.log("카드 확장됨!", { 
-    isExpanded, 
-    rawRegionId: regionId, 
-    category: item.category 
-  });
+    // 카드가 열릴 때만 API 호출
+    if (!isExpanded || !regionId || !item.category) return;
 
-  // 2. 조건을 하나씩 체크하며 로그를 남깁니다.
-  if (!isExpanded) return;
-  if (!regionId) {
-    console.error("오류: regionId가 없습니다!");
-    return;
-  }
-  if (!item.category) {
-    console.error("오류: category가 없습니다!");
-    return;
-  }
+    setLoading(true);
+    axios.get('http://localhost:8080/api/schedules/disposalOne', {
+      params: {
+        regionId: Number(regionId),
+        category: item.category.trim().toUpperCase()
+      }
+    })
+    .then(response => {
+      setSchedule(response.data);
+    })
+    .catch(err => {
+      console.error("스케줄 로딩 실패:", err.response?.data || err.message);
+    })
+    .finally(() => setLoading(false));
 
-  setLoading(true);
-  
-  // 3. API 호출
-  axios.get('http://localhost:8080/api/schedules/disposalOne', {
-    params: {
-      regionId: Number(regionId), // 숫자로 강제 변환
-      category: item.category.trim().toUpperCase()
-    }
-  })
-  .then(response => {
-    console.log("서버 응답 성공:", response.data);
-    setSchedule(response.data);
-  })
-  .catch(err => {
-    console.error("서버 응답 실패:", err.response?.data || err.message);
-  })
-  .finally(() => setLoading(false));
-
-}, [isExpanded, regionId, item.category]);
+  }, [isExpanded, regionId, item.category]);
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4 transition-all hover:shadow-md">
-      {/* 1. 헤더 영역 */}
+      {/* 1. 헤더 영역 (클릭 시 확장) */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full px-6 py-5 flex items-center justify-between hover:bg-gray-50/50"
@@ -88,10 +84,11 @@ export function ItemCard({ item, regionId, onFeedback }: any) {
             </div>
           </div>
 
-          {/* 3. 배출 방법 (item.method 또는 item.disposal_method 대응) */}
+          {/* 3. 배출 방법 */}
           <div className="mb-6">
             <h4 className="text-gray-900 font-bold mb-4 text-sm">배출 방법</h4>
             <div className="space-y-3">
+              {/* API 응답 필드명이 method 혹은 disposal_method인 경우 모두 대응 */}
               {splitData(item.disposal_method || item.method).map((step, idx) => (
                 <div key={idx} className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold mt-1">
@@ -120,19 +117,22 @@ export function ItemCard({ item, regionId, onFeedback }: any) {
 
           {/* 5. 신고 버튼 */}
           <div className="pt-4 border-t border-gray-100">
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      // item 객체 안에 있는 id를 인자로 넘겨줍니다!
-      // 보통 백엔드에서 받아온 데이터는 item.id에 PK가 담겨있습니다.
-      onFeedback(item.id); 
-    }}
-    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all text-xs font-medium"
-  >
-    <Flag className="w-4 h-4" />
-    <span>잘못된 정보 신고하기</span>
-  </button>
-</div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // ⭐ 부모로부터 받은 item.id를 안전하게 전달
+                if (item.id) {
+                  onFeedback(item.id);
+                } else {
+                  console.warn("아이템 ID가 없습니다.");
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all text-xs font-medium"
+            >
+              <Flag className="w-4 h-4" />
+              <span>잘못된 정보 신고하기</span>
+            </button>
+          </div>
         </div>
       )}
     </div>
