@@ -2,6 +2,7 @@
       "name": "RecycleMap Screen Design",
       "version": "0.1.0",
       "private": true,
+      "proxy": "http://localhost:8080",
       "dependencies": {
             "@radix-ui/react-accordion": "^1.2.3",
             "@radix-ui/react-alert-dialog": "^1.1.6",

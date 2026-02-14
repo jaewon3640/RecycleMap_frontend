@@ -5,10 +5,10 @@ import axios from 'axios';
 interface QAWriteProps {
   onBack: () => void;
   onSuccess: () => void;
-  userId: number; // 실제 로그인한 유저의 ID
+  userEmail: string; // ✅ userId (number) 대신 userEmail (string)을 받습니다.
 }
 
-export function QAWrite({ onBack, onSuccess, userId }: QAWriteProps) {
+export function QAWrite({ onBack, onSuccess, userEmail }: QAWriteProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,7 +17,7 @@ export function QAWrite({ onBack, onSuccess, userId }: QAWriteProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 프론트엔드 유효성 검사 (백엔드 @Size, @NotBlank 규격 반영)
+    // 프론트엔드 유효성 검사
     if (title.length < 1 || title.length > 100) {
       setError("제목은 1자 이상 100자 이하로 입력해주세요.");
       return;
@@ -27,19 +27,26 @@ export function QAWrite({ onBack, onSuccess, userId }: QAWriteProps) {
       return;
     }
 
+    // 로그인 정보 확인
+    if (!userEmail) {
+      setError("로그인 세션이 만료되었습니다. 다시 로그인해주세요.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // BoardDTO.Request 규격에 맞춰 전송
+      // ✅ [중요] userId 대신 email을 Request Body에 담아 보냅니다.
+      // 백엔드 DTO 필드명이 'email' 혹은 'authorEmail'인지 확인 후 맞춰주세요.
       await axios.post('http://localhost:8080/api/board/write', {
-        userId: userId,
+        email: userEmail, 
         title: title,
         content: content
       });
 
       alert("질문이 성공적으로 등록되었습니다! 🌱");
-      onSuccess(); // 등록 후 목록으로 이동
+      onSuccess(); 
     } catch (err: any) {
       console.error("등록 실패:", err);
       setError(err.response?.data?.message || "등록 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -71,7 +78,6 @@ export function QAWrite({ onBack, onSuccess, userId }: QAWriteProps) {
       </div>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        {/* 가이드 문구 */}
         <div className="mb-8 p-6 bg-green-50 rounded-2xl border border-green-100">
           <div className="flex items-center gap-2 mb-2 text-green-700">
             <CheckCircle2 className="w-5 h-5" />
@@ -83,7 +89,6 @@ export function QAWrite({ onBack, onSuccess, userId }: QAWriteProps) {
           </p>
         </div>
 
-        {/* 에러 메시지 */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 text-sm font-bold animate-pulse">
             <AlertCircle className="w-4 h-4" />
@@ -92,7 +97,6 @@ export function QAWrite({ onBack, onSuccess, userId }: QAWriteProps) {
         )}
 
         <div className="space-y-6">
-          {/* 제목 입력 */}
           <div>
             <label className="block text-sm font-black text-gray-700 mb-2 ml-1">제목</label>
             <input 
@@ -104,7 +108,6 @@ export function QAWrite({ onBack, onSuccess, userId }: QAWriteProps) {
             />
           </div>
 
-          {/* 내용 입력 */}
           <div>
             <label className="block text-sm font-black text-gray-700 mb-2 ml-1">내용</label>
             <textarea 

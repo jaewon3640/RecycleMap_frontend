@@ -16,31 +16,23 @@ export function Login({ onLoginSuccess, onGoToSignup }: LoginProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  e.preventDefault();
+  try {
+    const response = await axios.post('http://localhost:8080/api/auth/login', {
+      email: email, // 사용자가 입력한 email 변수
+      password: password,
+    });
 
-    if (!email || !password) {
-      setError('이메일과 비밀번호를 입력해주세요');
-      return;
-    }
+    const { accessToken, refreshToken, nickname } = response.data;
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    localStorage.setItem('nickname', nickname);
+    
+    // ✅ 추가: 입력했던 이메일을 로컬 스토리지에 저장!
+    localStorage.setItem('userEmail', email); 
 
-    setIsLoading(true);
-
-    try {
-      const response = await axios.post('http://localhost:8080/api/auth/login', {
-        email: email,
-        password: password,
-      });
-
-      // 성공 시 처리
-      const { accessToken, refreshToken, nickname } = response.data;
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('nickname', nickname);
-
-      onLoginSuccess(nickname);
-      
-    } catch (err: any) {
+    onLoginSuccess(nickname);
+  } catch (err: any) {
       // 에러 바인딩 수정 부분 시작
       if (err.response && err.response.data) {
         // 백엔드 ErrorResponse(code, message) 구조에서 message만 추출

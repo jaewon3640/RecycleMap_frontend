@@ -12,9 +12,11 @@ interface QAListProps {
   onBack: () => void;
   onSelectPost: (postId: number) => void;
   onGoToWrite: () => void;
+  // 필요 시 현재 로그인된 사용자의 이메일을 받을 수 있도록 추가
+  userEmail?: string; 
 }
 
-export function QAList({ onBack, onSelectPost, onGoToWrite }: QAListProps) {
+export function QAList({ onBack, onSelectPost, onGoToWrite, userEmail }: QAListProps) {
   const [posts, setPosts] = useState<any[]>([]);
   const [keyword, setKeyword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,8 +25,8 @@ export function QAList({ onBack, onSelectPost, onGoToWrite }: QAListProps) {
   const fetchPosts = async (titleQuery: string = "") => {
     setIsLoading(true);
     try {
-      // ✅ 해결: userId 파라미터를 삭제하여 "전체 게시글"을 요청합니다.
-      const response = await axios.get('http://localhost:8080//api/board/search-name', {
+      // 전체 게시글을 검색하는 API 호출
+      const response = await axios.get('http://localhost:8080/api/board/search-name', {
         params: {
           title: titleQuery
         }
@@ -75,6 +77,7 @@ export function QAList({ onBack, onSelectPost, onGoToWrite }: QAListProps) {
       </div>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* 검색창 */}
         <form onSubmit={handleSearch} className="relative mb-8">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input 
@@ -86,9 +89,13 @@ export function QAList({ onBack, onSelectPost, onGoToWrite }: QAListProps) {
           />
         </form>
 
+        {/* 게시글 목록 */}
         <div className="space-y-3">
           {isLoading ? (
-            <div className="py-20 text-center text-gray-400 font-bold">데이터를 불러오는 중...</div>
+            <div className="py-20 text-center text-gray-400 font-bold flex flex-col items-center gap-4">
+               <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+               데이터를 불러오는 중...
+            </div>
           ) : posts.length > 0 ? (
             posts.map((post) => (
               <button 
@@ -101,8 +108,8 @@ export function QAList({ onBack, onSelectPost, onGoToWrite }: QAListProps) {
                     <span className="text-[10px] font-black text-green-600 uppercase tracking-widest bg-green-50 px-2 py-0.5 rounded">Question</span>
                     <div className="flex items-center gap-1 text-xs text-gray-400 font-medium">
                       <User className="w-3 h-3" /> 
-                      {/* 백엔드 DTO의 authorName(조인 결과)을 출력 */}
-                      {post.authorName || '작성자 미상'} 
+                      {/* 백엔드 응답 데이터의 필드명에 따라 authorName 또는 nickname 사용 */}
+                      {post.authorName || post.nickname || '작성자 미상'} 
                     </div>
                   </div>
                   <h3 className="font-bold text-gray-900 text-lg group-hover:text-green-700 transition-colors line-clamp-1">
