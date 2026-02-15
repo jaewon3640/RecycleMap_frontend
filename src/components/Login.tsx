@@ -4,7 +4,8 @@ import { Logo } from './Logo';
 import axios from 'axios';
 
 interface LoginProps {
-  onLoginSuccess: (nickname: string) => void;
+  // ✅ role 인자를 추가하여 App.tsx에 권한 정보를 넘깁니다.
+  onLoginSuccess: (nickname: string, role: string) => void;
   onGoToSignup: () => void;
 }
 
@@ -16,27 +17,31 @@ export function Login({ onLoginSuccess, onGoToSignup }: LoginProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  try {
-    const response = await axios.post('http://localhost:8080/api/auth/login', {
-      email: email, // 사용자가 입력한 email 변수
-      password: password,
-    });
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
-    const { accessToken, refreshToken, nickname } = response.data;
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
-    localStorage.setItem('nickname', nickname);
-    
-    // ✅ 추가: 입력했던 이메일을 로컬 스토리지에 저장!
-    localStorage.setItem('userEmail', email); 
+    try {
+      const response = await axios.post('http://localhost:8080/api/auth/login', {
+        email: email,
+        password: password,
+      });
 
-    onLoginSuccess(nickname);
-  } catch (err: any) {
-      // 에러 바인딩 수정 부분 시작
+      // ✅ 백엔드 응답에서 role을 추가로 구조 분해 할당합니다.
+      const { accessToken, refreshToken, nickname, role } = response.data;
+
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('nickname', nickname);
+      localStorage.setItem('userEmail', email); 
+      // ✅ 나중을 위해 로컬 스토리지에도 권한 정보를 저장합니다.
+      localStorage.setItem('userRole', role);
+
+      // ✅ 닉네임과 권한 정보를 함께 부모 컴포넌트로 전달합니다.
+      onLoginSuccess(nickname, role);
+
+    } catch (err: any) {
       if (err.response && err.response.data) {
-        // 백엔드 ErrorResponse(code, message) 구조에서 message만 추출
-        // 만약 data 자체가 객체라면 .message를 쓰고, 아니면 data 자체를 출력
         const serverMessage = typeof err.response.data === 'object' 
                               ? err.response.data.message 
                               : err.response.data;
@@ -44,7 +49,6 @@ export function Login({ onLoginSuccess, onGoToSignup }: LoginProps) {
       } else {
         setError('서버와 연결할 수 없습니다. 네트워크 상태를 확인하세요.');
       }
-      // 에러 바인딩 수정 부분 끝
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +105,7 @@ export function Login({ onLoginSuccess, onGoToSignup }: LoginProps) {
 
         {/* 오른쪽 섹션 - 로그인 폼 */}
         <div className="flex items-center justify-center">
-          <div className="w-full max-w-md">
+          <div className="w-full max-md">
             <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 md:p-10 border border-white/20">
               <div className="text-center mb-8">
                 <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl mb-4 shadow-lg">
@@ -157,9 +161,8 @@ export function Login({ onLoginSuccess, onGoToSignup }: LoginProps) {
                   </div>
                 </div>
 
-                {/* 에러 메시지 표시 영역 */}
                 {error && (
-                  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 transition-all animate-shake">
+                  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 transition-all">
                     <p className="text-sm text-red-700 font-semibold">{error}</p>
                   </div>
                 )}

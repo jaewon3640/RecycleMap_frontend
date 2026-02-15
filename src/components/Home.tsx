@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // ✅ useEffect 추가
 import { 
   Search, 
   MapPin, 
   MessageSquare, 
   ChevronRight, 
-  Bell, 
   HelpCircle, 
+  ShieldCheck, // ✅ 관리자 아이콘 추가
   Sparkles
 } from 'lucide-react';
 import { Region, Category } from '../App';
@@ -19,6 +19,7 @@ interface HomeProps {
   onCategorySelect: (category: Category) => void;
   onGoToMyFeedback: () => void;
   onGoToQA: () => void;
+  onGoToAdmin: () => void; // ✅ 관리자 페이지 이동 함수 추가
 }
 
 export function Home({ 
@@ -27,9 +28,19 @@ export function Home({
   onSearch, 
   onCategorySelect,
   onGoToMyFeedback,
-  onGoToQA
+  onGoToQA,
+  onGoToAdmin // ✅ Props로 받음
 }: HomeProps) {
   const [searchInput, setSearchInput] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false); // ✅ 관리자 상태 관리
+
+  // ✅ 로컬 스토리지에서 권한 정보를 읽어와 관리자 여부 판단
+  useEffect(() => {
+    const role = localStorage.getItem('userRole');
+    if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+      setIsAdmin(true);
+    }
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,13 +73,26 @@ export function Home({
             </div>
           </div>
           
-          <button 
-            onClick={onGoToMyFeedback}
-            className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full hover:bg-green-600 hover:text-white transition-all shadow-sm border border-green-100 font-bold text-sm"
-          >
-            <MessageSquare className="w-4 h-4" />
-            내 활동
-          </button>
+          <div className="flex items-center gap-2">
+            {/* ✅ 관리자(ADMIN) 권한이 있을 때만 버튼 노출 */}
+            {isAdmin && (
+              <button 
+                onClick={onGoToAdmin}
+                className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-full hover:bg-slate-900 transition-all shadow-md font-bold text-sm"
+              >
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                관리자 모드
+              </button>
+            )}
+
+            <button 
+              onClick={onGoToMyFeedback}
+              className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full hover:bg-green-600 hover:text-white transition-all shadow-sm border border-green-100 font-bold text-sm"
+            >
+              <MessageSquare className="w-4 h-4" />
+              내 활동
+            </button>
+          </div>
         </div>
       </header>
 
@@ -164,9 +188,8 @@ export function Home({
           </div>
         </section>
 
-        {/* Q&A 및 피드백 버튼 섹션 (맨 아래 배치) */}
+        {/* 하단 버튼 섹션 */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10">
-          {/* Q&A 버튼 */}
           <button 
             onClick={onGoToQA}
             className="flex items-center justify-between p-5 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl shadow-sm hover:shadow-lg hover:border-green-400 transition-all text-left group relative overflow-hidden"
@@ -184,7 +207,6 @@ export function Home({
             <ChevronRight className="w-6 h-6 text-green-500 group-hover:text-green-600 transform group-hover:translate-x-1 transition-all relative" />
           </button>
 
-          {/* 내 피드백 바로가기 (짝을 맞춰 배치) */}
           <button 
             onClick={onGoToMyFeedback}
             className="flex items-center justify-between p-5 bg-white border-2 border-gray-100 rounded-2xl shadow-sm hover:shadow-lg hover:border-green-300 transition-all text-left group relative overflow-hidden"
