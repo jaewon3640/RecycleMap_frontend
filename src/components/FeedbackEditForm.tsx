@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Send, MessageCircle, CheckCircle2, Info } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 
 // 1. Props 인터페이스 수정 (trashDetailId 추가)
 interface FeedbackEditFormProps {
@@ -58,8 +58,8 @@ export function FeedbackEditForm({
       const token = localStorage.getItem('accessToken');
       
       // ⭐ 백엔드 DTO(FeedbackDTO.Request) 규격에 맞춰 전송
-      await axios.put(
-        `http://localhost:8080/api/feedbacks/${feedbackId}`, 
+      await api.put(
+        `/api/feedbacks/${feedbackId}`,
         { 
           content: pureContent,
           trashDetailId: trashDetailId, // @NotNull 필수값

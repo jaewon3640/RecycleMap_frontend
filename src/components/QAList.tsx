@@ -6,7 +6,7 @@ import {
   User, 
   ChevronRight 
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 
 interface QAListProps {
   onBack: () => void;
@@ -26,7 +26,7 @@ export function QAList({ onBack, onSelectPost, onGoToWrite, userEmail }: QAListP
     setIsLoading(true);
     try {
       // 전체 게시글을 검색하는 API 호출
-      const response = await axios.get('http://localhost:8080/api/board/search-name', {
+      const response = await api.get('/api/board/search-name', {
         params: {
           title: titleQuery
         }

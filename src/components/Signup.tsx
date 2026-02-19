@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, User, Trash2, Recycle, Leaf, Users, ArrowRight, Sparkles } from 'lucide-react';
 import { Logo } from './Logo';
-import axios from 'axios'; // npm install axios 필요
+import api from '../api';
 
 interface SignupProps {
   onGoToLogin: () => void;
@@ -38,7 +38,7 @@ export function Signup({ onGoToLogin }: SignupProps) {
 
     try {
       // 백엔드 API 호출 (DTO 필드명: email, password, passwordCheck, nickname)
-      const response = await axios.post('http://localhost:8080/api/auth/signup', {
+      const response = await api.post('/api/auth/signup', {
         email: email,
         password: password,
         passwordCheck: confirmPassword,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Send, AlertCircle, CheckCircle2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 
 interface QAWriteProps {
   onBack: () => void;
@@ -39,7 +39,7 @@ export function QAWrite({ onBack, onSuccess, userEmail }: QAWriteProps) {
     try {
       // ✅ [중요] userId 대신 email을 Request Body에 담아 보냅니다.
       // 백엔드 DTO 필드명이 'email' 혹은 'authorEmail'인지 확인 후 맞춰주세요.
-      await axios.post('http://localhost:8080/api/board/write', {
+      await api.post('/api/board/write', {
         email: userEmail, 
         title: title,
         content: content

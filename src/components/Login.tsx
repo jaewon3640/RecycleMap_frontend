@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Recycle, Leaf, ArrowRight, Sparkles } from 'lucide-react';
 import { Logo } from './Logo';
-import axios from 'axios';
+import api from '../api';
 
 interface LoginProps {
   // ✅ role 인자를 추가하여 App.tsx에 권한 정보를 넘깁니다.
@@ -22,7 +22,7 @@ export function Login({ onLoginSuccess, onGoToSignup }: LoginProps) {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/login', {
+      const response = await api.post('/api/auth/login', {
         email: email,
         password: password,
       });

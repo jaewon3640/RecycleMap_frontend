@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Send, CheckCircle, Loader2 } from 'lucide-react';
 import { Region } from '../App';
-import axios from 'axios';
+import api from '../api';
 
 interface FeedbackFormProps {
   trashDetailId: number;
@@ -68,7 +68,7 @@ console.log("전송 직전 토큰 확인:", token); // 여기에 로그를 찍�
       };
 
       // ⭐ 4. Axios 호출 시 헤더에 토큰 실어 보내기
-      const response = await axios.post('http://localhost:8080/api/feedbacks/save', feedbackRequest, {
+      const response = await api.post('/api/feedbacks/save', feedbackRequest, {
         headers: {
             'Authorization': `Bearer ${token}` // Bearer 한 칸 띄우는 것 확인
         },

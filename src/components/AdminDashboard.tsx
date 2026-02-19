@@ -3,7 +3,7 @@ import {
   LayoutDashboard, MessageSquare, ArrowLeft, 
   Trash2, MessageCircle, ClipboardList, Send, Edit2, Check, X
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 
 // ✅ 인터페이스 정의
 interface BoardResponse {
@@ -67,10 +67,10 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     try {
       const headers = getHeaders();
       if (activeTab === 'boards') {
-        const res = await axios.get('http://localhost:8080/api/board/search-name', { headers });
+        const res = await api.get('/api/board/search-name', { headers });
         setBoards(res.data);
       } else {
-        const res = await axios.get('http://localhost:8080/api/feedbacks/admin', { headers });
+        const res = await api.get('/api/feedbacks/admin', { headers });
         setFeedbacks(res.data);
       }
     } catch (err) {
@@ -91,8 +91,8 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     try {
       setLoading(true);
       const headers = getHeaders();
-      const boardRes = await axios.get(`http://localhost:8080/api/board/${id}`, { headers });
-      const replyRes = await axios.get(`http://localhost:8080/api/boardReply?boardId=${id}`, { headers });
+      const boardRes = await api.get(`/api/board/${id}`, { headers });
+      const replyRes = await api.get(`/api/boardReply?boardId=${id}`, { headers });
       setSelectedBoard({ ...boardRes.data, boardReplyList: replyRes.data });
     } catch (err) {
       alert("상세 정보를 가져오는데 실패했습니다.");
@@ -108,7 +108,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     }
     try {
       const replyData = { replyContent: replyContent.trim(), authorName: "관리자" };
-      await axios.post(`http://localhost:8080/api/boardReply/${selectedBoard?.id}`, replyData, { headers: getHeaders() });
+      await api.post(`/api/boardReply/${selectedBoard?.id}`, replyData, { headers: getHeaders() });
       setReplyContent('');
       if (selectedBoard) handleBoardClick(selectedBoard.id);
       fetchData(); 
@@ -122,7 +122,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     setSelectedFeedback(feedback);
     try {
       const headers = getHeaders();
-      const res = await axios.get(`http://localhost:8080/api/feedback-reply?feedbackId=${feedback.id}`, { headers });
+      const res = await api.get(`/api/feedback-reply?feedbackId=${feedback.id}`, { headers });
       setFeedbackReplies(res.data);
     } catch (err) {
       console.error("피드백 답변 로딩 실패", err);
@@ -137,7 +137,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     try {
       const headers = getHeaders();
       const replyData = { content: feedbackReply.trim(), authorName: "관리자" };
-      await axios.post(`http://localhost:8080/api/feedback-reply/${selectedFeedback?.id}`, replyData, { headers });
+      await api.post(`/api/feedback-reply/${selectedFeedback?.id}`, replyData, { headers });
       alert("조치가 저장되었습니다.");
       setFeedbackReply('');
       if (selectedFeedback) handleFeedbackClick(selectedFeedback);
@@ -151,7 +151,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const handleDeleteFeedbackReply = async (replyId: number) => {
     if (!window.confirm("이 답변을 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`http://localhost:8080/api/feedback-reply/${replyId}`, { headers: getHeaders() });
+      await api.delete(`/api/feedback-reply/${replyId}`, { headers: getHeaders() });
       if (selectedFeedback) handleFeedbackClick(selectedFeedback);
       fetchData();
     } catch (err) {
@@ -161,7 +161,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
 
   const handleUpdateFeedbackReply = async (replyId: number) => {
     try {
-      await axios.put(`http://localhost:8080/api/feedback-reply/${replyId}`, 
+      await api.put(`/api/feedback-reply/${replyId}`, 
         { content: editContent, authorName: "관리자" }, 
         { headers: getHeaders() }
       );
@@ -175,7 +175,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const handleDeleteBoard = async (id: number) => {
     if (!window.confirm("정말로 게시글을 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`http://localhost:8080/api/board/${id}`, { headers: getHeaders() });
+      await api.delete(`/api/board/${id}`, { headers: getHeaders() });
       setBoards(boards.filter(b => b.id !== id));
       setSelectedBoard(null);
     } catch (err) {

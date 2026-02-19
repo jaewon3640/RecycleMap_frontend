@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, AlertTriangle, Calendar, Flag } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 
 // Props 타입 정의 (any 대신 인터페이스 권장)
 interface ItemCardProps {
@@ -31,7 +31,7 @@ export function ItemCard({ item, regionId, onFeedback }: ItemCardProps) {
     if (!isExpanded || !regionId || !item.category) return;
 
     setLoading(true);
-    axios.get('http://localhost:8080/api/schedules/disposalOne', {
+    api.get('/api/schedules/disposalOne', {
       params: {
         regionId: Number(regionId),
         category: item.category.trim().toUpperCase()

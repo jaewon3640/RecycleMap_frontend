@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MapPin, ArrowRight, Check, Map as MapIcon } from 'lucide-react';
 import { Region } from '../App';
-import axios from 'axios';
+import api from '../api';
 
 interface RegionSelectProps {
   onRegionSelect: (region: Region) => void;
@@ -44,7 +44,7 @@ export function RegionSelect({ onRegionSelect, userName }: RegionSelectProps) {
         const token = localStorage.getItem('accessToken');
         
         // 백엔드 저장 로직
-        await axios.post('http://localhost:8080/api/user/region', {
+        await api.post('/api/user/region', {
           city: region.city,
           district: region.district
         }, {

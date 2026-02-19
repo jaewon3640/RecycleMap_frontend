@@ -3,7 +3,7 @@ import {
   ArrowLeft, MessageSquare, User, Calendar, 
   Trash2, Edit3, Check, X, Send 
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 
 interface QADetailProps {
   postId: number;
@@ -33,13 +33,13 @@ export function QADetail({ postId, userEmail, onBack }: QADetailProps) {
     try {
       setIsLoading(true);
       // 1. 게시글 상세 조회
-      const postRes = await axios.get(`http://localhost:8080/api/board/${postId}`);
+      const postRes = await api.get(`/api/board/${postId}`);
       setPost(postRes.data);
       setEditTitle(postRes.data.title);
       setEditContent(postRes.data.content);
 
       // 2. 답변 목록 조회 (작성하신 BoardReplyController 기반)
-      const replyRes = await axios.get(`http://localhost:8080/api/boardReply`, {
+      const replyRes = await api.get(`/api/boardReply`, {
         params: { boardId: postId }
       });
       setReplies(replyRes.data);
@@ -61,7 +61,7 @@ export function QADetail({ postId, userEmail, onBack }: QADetailProps) {
     if (!newReply.trim()) return;
     try {
       // BoardReplyDTO.Request 구조에 맞게 전송
-      await axios.post(`http://localhost:8080/api/boardReply/${postId}`, {
+      await api.post(`/api/boardReply/${postId}`, {
         replyContent: newReply,
         authorName: userEmail.split('@')[0] // 이메일 앞부분을 닉네임처럼 사용 (필요시 변경)
       }, { headers: getHeaders() });
@@ -77,7 +77,7 @@ export function QADetail({ postId, userEmail, onBack }: QADetailProps) {
   const handleDeleteReply = async (replyId: number) => {
     if (!window.confirm("답변을 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`http://localhost:8080/api/boardReply/${replyId}`, { headers: getHeaders() });
+      await api.delete(`/api/boardReply/${replyId}`, { headers: getHeaders() });
       fetchData();
     } catch (error) {
       alert("삭제 권한이 없습니다.");
@@ -88,14 +88,14 @@ export function QADetail({ postId, userEmail, onBack }: QADetailProps) {
   const handleDelete = async () => {
     if (!window.confirm("정말로 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`http://localhost:8080/api/board/${postId}`, { params: { email: userEmail } });
+      await api.delete(`/api/board/${postId}`, { params: { email: userEmail } });
       onBack();
     } catch (error) { alert("삭제 실패"); }
   };
 
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:8080/api/board/${postId}`, 
+      await api.put(`/api/board/${postId}`, 
         { title: editTitle, content: editContent }, 
         { params: { email: userEmail } }
       );

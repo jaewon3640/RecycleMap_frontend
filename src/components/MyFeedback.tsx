@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, MessageSquare, Calendar, Trash2, Edit2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 
 // 1. 백엔드 응답 데이터 구조 수정
 interface FeedbackResponse {
@@ -29,7 +29,7 @@ export function MyFeedback({ onBack, onEdit }: MyFeedbackProps) {
   const fetchMyFeedbacks = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get('http://localhost:8080/api/feedbacks/my', {
+      const response = await api.get('/api/feedbacks/my', {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -49,7 +49,7 @@ export function MyFeedback({ onBack, onEdit }: MyFeedbackProps) {
     if (!window.confirm("정말 이 피드백을 삭제하시겠습니까?")) return;
     try {
       const token = localStorage.getItem('accessToken');
-      await axios.delete(`http://localhost:8080/api/feedbacks/${id}`, {
+      await api.delete(`/api/feedbacks/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFeedbacks(feedbacks.filter(f => f.id !== id));

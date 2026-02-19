@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../api';
 import { Region, Category } from '../App';
 import { ItemCard } from './ItemCard';
 
@@ -27,7 +27,7 @@ export function CategoryRules({ region, category, onBack, onFeedback }: Category
       setIsLoading(true);
       try {
         // 2. 백엔드 API 호출 (지역 ID와 카테고리 Enum 값 전달)
-        const response = await axios.get('http://localhost:8080/api/trash-detail/all-trash', {
+        const response = await api.get('/api/trash-detail/all-trash', {
           params: {
             regionId: region.dbId,
             category: category.id.toUpperCase() // Enum 대문자 규격 준수

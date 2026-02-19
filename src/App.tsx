@@ -12,7 +12,7 @@ import { QAList } from "./components/QAList";
 import { QADetail } from "./components/QADetail";
 import { QAWrite } from "./components/QAWrite";
 // ✅ AdminDashboard를 import 합니다.
-import { AdminDashboard } from "./components/AdminDashBoard";
+import { AdminDashboard } from "./components/AdminDashboard";
 
 export type ViewType =
   | "login"
