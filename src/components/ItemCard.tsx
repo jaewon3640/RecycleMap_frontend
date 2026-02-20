@@ -23,7 +23,7 @@ export function ItemCard({ item, regionId, onFeedback }: ItemCardProps) {
 
   const splitData = (text: string | undefined) => {
     if (!text) return [];
-    return text.split('|').map(s => s.trim()).filter(s => s !== "");
+    return text.split('\n').map(s => s.trim()).filter(s => s !== "");
   };
 
   useEffect(() => {
