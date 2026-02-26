@@ -23,7 +23,21 @@ export function ItemCard({ item, regionId, onFeedback }: ItemCardProps) {
 
   const splitData = (text: string | undefined) => {
     if (!text) return [];
-    return text.split('\n').map(s => s.trim()).filter(s => s !== "");
+
+    // 줄바꿈으로 구분된 경우
+    if (text.includes('\n')) {
+      return text.split('\n').map(s => s.trim()).filter(s => s !== "");
+    }
+
+    // "N단계" 패턴으로 구분된 경우 → 구분자 자체를 기준으로 split
+    if (/\d+단계/.test(text)) {
+      return text
+        .split(/\d+단계[.．:：]?\s*/)
+        .filter(s => s.trim() !== "")
+        .map(s => s.trim());
+    }
+
+    return [text];
   };
 
   useEffect(() => {
