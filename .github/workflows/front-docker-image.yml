@@ -1,0 +1,68 @@
+name: Frontend CI/CD Pipeline (Docker)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Node.js 설정
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. 의존성 설치
+      - name: Install dependencies
+        run: npm install
+
+      # 4. 빌드 테스트 (빌드가 정상적으로 되는지 확인)
+      - name: Build test
+        run: npm run build
+
+      # 5. Docker Hub 로그인
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 6. Docker 이미지 빌드 & Push
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/my-frontend:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/my-frontend:latest
+
+      # 7. EC2에 배포
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 기존 프론트 컨테이너 정리
+            docker stop my-frontend || true
+            docker rm my-frontend || true
+
+            # 80 포트를 쓰고 있는 다른 컨테이너도 정리
+            CONTAINER_ID=$(docker ps -q --filter "publish=80")
+            if [ -n "$CONTAINER_ID" ]; then
+              docker stop $CONTAINER_ID
+              docker rm $CONTAINER_ID
+            fi
+
+            # 새 이미지 Pull & 실행
+            docker pull ${{ secrets.DOCKER_USERNAME }}/my-frontend:latest
+            docker run -d \
+              --name my-frontend \
+              -p 80:80 \
+              --restart unless-stopped \
+              ${{ secrets.DOCKER_USERNAME }}/my-frontend:latest
