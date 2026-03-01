@@ -48,10 +48,10 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 기존 프론트 컨테이너 정리
-            docker stop my-frontend || true
-            docker rm my-frontend || true
-
+            cd ~/RecycleProjTempoary
+            docker pull jaewon3640/recycle-frontend:latest
+            docker-compose up -d --no-deps frontend
+            
             # 80 포트를 쓰고 있는 다른 컨테이너도 정리
             CONTAINER_ID=$(docker ps -q --filter "publish=80")
             if [ -n "$CONTAINER_ID" ]; then
