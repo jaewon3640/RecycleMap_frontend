@@ -63,6 +63,7 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/my-frontend:latest
             docker run -d \
               --name my-frontend \
+              --network ec2-user_default \
               -p 80:80 \
               --restart unless-stopped \
               ${{ secrets.DOCKER_USERNAME }}/my-frontend:latest
