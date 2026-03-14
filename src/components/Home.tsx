@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'; // ✅ useEffect 추가
-import { 
-  Search, 
-  MapPin, 
-  MessageSquare, 
-  ChevronRight, 
-  HelpCircle, 
+import {
+  Search,
+  MapPin,
+  MessageSquare,
+  ChevronRight,
+  HelpCircle,
   ShieldCheck, // ✅ 관리자 아이콘 추가
-  Sparkles
+  Sparkles,
+  LogOut
 } from 'lucide-react';
 import { Region, Category } from '../App';
 import { mockCategories, mockPopularItems } from '../data/mockData';
@@ -20,16 +21,18 @@ interface HomeProps {
   onGoToMyFeedback: () => void;
   onGoToQA: () => void;
   onGoToAdmin: () => void; // ✅ 관리자 페이지 이동 함수 추가
+  onLogout: () => void;
 }
 
-export function Home({ 
-  selectedRegion, 
-  onRegionChange, 
-  onSearch, 
+export function Home({
+  selectedRegion,
+  onRegionChange,
+  onSearch,
   onCategorySelect,
   onGoToMyFeedback,
   onGoToQA,
-  onGoToAdmin // ✅ Props로 받음
+  onGoToAdmin, // ✅ Props로 받음
+  onLogout
 }: HomeProps) {
   const [searchInput, setSearchInput] = useState('');
   const [isAdmin, setIsAdmin] = useState(false); // ✅ 관리자 상태 관리
@@ -76,7 +79,7 @@ export function Home({
           <div className="flex items-center gap-2">
             {/* ✅ 관리자(ADMIN) 권한이 있을 때만 버튼 노출 */}
             {isAdmin && (
-              <button 
+              <button
                 onClick={onGoToAdmin}
                 className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-full hover:bg-slate-900 transition-all shadow-md font-bold text-sm"
               >
@@ -85,12 +88,20 @@ export function Home({
               </button>
             )}
 
-            <button 
+            <button
               onClick={onGoToMyFeedback}
               className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full hover:bg-green-600 hover:text-white transition-all shadow-sm border border-green-100 font-bold text-sm"
             >
               <MessageSquare className="w-4 h-4" />
               내 활동
+            </button>
+
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-full hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100 font-bold text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              로그아웃
             </button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import api from "./api";
 import { Home } from "./components/Home";
 import { CategoryRules } from "./components/CategoryRules";
 import { SearchResults } from "./components/SearchResults";
@@ -91,6 +92,27 @@ const handleLoginSuccess = (nickname: string, role: string) => {
     setCurrentView("feedback-edit");
   };
 
+  // 로그아웃 핸들러
+  const handleLogout = () => {
+    const accessToken = localStorage.getItem('accessToken');
+
+    // 1. 클라이언트 상태 즉시 초기화 (API 결과와 무관하게 먼저 실행)
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('nickname');
+    setUserEmail("");
+    setCurrentView("login");
+
+    // 2. 백엔드 토큰 무효화 (fire-and-forget)
+    if (accessToken) {
+      api.post('/api/auth/logout', null, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }).catch(() => {});
+    }
+  };
+
   // Q&A 핸들러
   const handleGoToQA = () => setCurrentView("qa-list");
   const handleSelectPost = (postId: number) => { setSelectedPostId(postId); setCurrentView("qa-detail"); };
@@ -128,8 +150,8 @@ const handleLoginSuccess = (nickname: string, role: string) => {
     onCategorySelect={(c) => { setSelectedCategory(c); setCurrentView("category"); }}
     onGoToMyFeedback={handleGoToMyFeedback}
     onGoToQA={handleGoToQA}
-    // ✅ 이 줄이 빠져 있었습니다! 추가해 주세요.
-    onGoToAdmin={() => setCurrentView("admin-dashboard")} 
+    onGoToAdmin={() => setCurrentView("admin-dashboard")}
+    onLogout={handleLogout}
   />
 )}
 
