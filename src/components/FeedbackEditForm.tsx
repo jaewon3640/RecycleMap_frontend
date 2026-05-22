@@ -55,18 +55,12 @@ export function FeedbackEditForm({
 
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      
-      // ⭐ 백엔드 DTO(FeedbackDTO.Request) 규격에 맞춰 전송
       await api.put(
         `/api/feedbacks/${feedbackId}`,
-        { 
+        {
           content: pureContent,
-          trashDetailId: trashDetailId, // @NotNull 필수값
-          feedBackType: "CONTENT_ERROR"  // 백엔드 Enum(FeedbackType)에 정의된 값 사용
-        }, 
-        { 
-          headers: { Authorization: `Bearer ${token}` } 
+          trashDetailId: trashDetailId,
+          feedBackType: "CONTENT_ERROR"
         }
       );
 

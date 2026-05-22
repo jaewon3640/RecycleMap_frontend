@@ -7,7 +7,7 @@ const PAGE_SIZE = 10;
 interface FeedbackResponse {
   id: number;
   content: string;
-  categoryName: string;
+  feedbackTypeDescription: string;
   createdAt: string;
   trashDetailId: number;
 }
@@ -31,9 +31,7 @@ export function MyFeedback({ onBack, onEdit }: MyFeedbackProps) {
   const fetchMyFeedbacks = async (page: number) => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
       const response = await api.get('/api/feedbacks/my', {
-        headers: { Authorization: `Bearer ${token}` },
         params: { page, size: PAGE_SIZE }
       });
 
@@ -60,11 +58,7 @@ export function MyFeedback({ onBack, onEdit }: MyFeedbackProps) {
   const handleDelete = async (id: number) => {
     if (!window.confirm("정말 이 피드백을 삭제하시겠습니까?")) return;
     try {
-      const token = localStorage.getItem('accessToken');
-      await api.delete(`/api/feedbacks/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // 삭제 후 현재 페이지 새로고침
+      await api.delete(`/api/feedbacks/${id}`);
       fetchMyFeedbacks(currentPage);
     } catch (error) {
       alert("삭제에 실패했습니다.");
@@ -114,7 +108,7 @@ export function MyFeedback({ onBack, onEdit }: MyFeedbackProps) {
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-100">
-                      {feedback.categoryName}
+                      {feedback.feedbackTypeDescription}
                     </div>
                     <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
                       <button

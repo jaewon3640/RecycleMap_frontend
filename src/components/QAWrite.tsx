@@ -40,7 +40,6 @@ export function QAWrite({ onBack, onSuccess, userEmail }: QAWriteProps) {
       // ✅ [중요] userId 대신 email을 Request Body에 담아 보냅니다.
       // 백엔드 DTO 필드명이 'email' 혹은 'authorEmail'인지 확인 후 맞춰주세요.
       await api.post('/api/board/write', {
-        email: userEmail, 
         title: title,
         content: content
       });

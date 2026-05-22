@@ -65,18 +65,11 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [editingReplyId, setEditingReplyId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState('');
 
-  const getHeaders = () => {
-    const token = localStorage.getItem('accessToken');
-    return { Authorization: `Bearer ${token}` };
-  };
-
   const fetchData = async (page: number = 0) => {
     setLoading(true);
     try {
-      const headers = getHeaders();
       if (activeTab === 'boards') {
         const res = await api.get('/api/board/search-name', {
-          headers,
           params: { page, size: PAGE_SIZE }
         });
         const pageData = res.data;
@@ -86,7 +79,6 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
         setCurrentPage(pageData.number ?? 0);
       } else {
         const res = await api.get('/api/feedbacks/admin', {
-          headers,
           params: { page, size: PAGE_SIZE }
         });
         const pageData = res.data;
@@ -125,9 +117,8 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const handleBoardClick = async (id: number) => {
     try {
       setLoading(true);
-      const headers = getHeaders();
-      const boardRes = await api.get(`/api/board/${id}`, { headers });
-      const replyRes = await api.get(`/api/boardReply?boardId=${id}`, { headers });
+      const boardRes = await api.get(`/api/board/${id}`);
+      const replyRes = await api.get(`/api/boardReply?boardId=${id}`);
       setSelectedBoard({ ...boardRes.data, boardReplyList: replyRes.data });
     } catch (err) {
       alert("상세 정보를 가져오는데 실패했습니다.");
@@ -143,10 +134,10 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     }
     try {
       const replyData = { replyContent: replyContent.trim(), authorName: "관리자" };
-      await api.post(`/api/boardReply/${selectedBoard?.id}`, replyData, { headers: getHeaders() });
+      await api.post(`/api/boardReply/${selectedBoard?.id}`, replyData);
       setReplyContent('');
       if (selectedBoard) handleBoardClick(selectedBoard.id);
-      fetchData(); 
+      fetchData();
     } catch (err) {
       alert("답변 등록 실패");
     }
@@ -156,8 +147,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const handleFeedbackClick = async (feedback: FeedbackResponse) => {
     setSelectedFeedback(feedback);
     try {
-      const headers = getHeaders();
-      const res = await api.get(`/api/feedback-reply?feedbackId=${feedback.id}`, { headers });
+      const res = await api.get(`/api/feedback-reply?feedbackId=${feedback.id}`);
       setFeedbackReplies(res.data);
     } catch (err) {
       console.error("피드백 답변 로딩 실패", err);
@@ -170,9 +160,8 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
       return;
     }
     try {
-      const headers = getHeaders();
       const replyData = { content: feedbackReply.trim(), authorName: "관리자" };
-      await api.post(`/api/feedback-reply/${selectedFeedback?.id}`, replyData, { headers });
+      await api.post(`/api/feedback-reply/${selectedFeedback?.id}`, replyData);
       alert("조치가 저장되었습니다.");
       setFeedbackReply('');
       if (selectedFeedback) handleFeedbackClick(selectedFeedback);
@@ -186,7 +175,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const handleDeleteFeedbackReply = async (replyId: number) => {
     if (!window.confirm("이 답변을 삭제하시겠습니까?")) return;
     try {
-      await api.delete(`/api/feedback-reply/${replyId}`, { headers: getHeaders() });
+      await api.delete(`/api/feedback-reply/${replyId}`);
       if (selectedFeedback) handleFeedbackClick(selectedFeedback);
       fetchData();
     } catch (err) {
@@ -196,9 +185,8 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
 
   const handleUpdateFeedbackReply = async (replyId: number) => {
     try {
-      await api.put(`/api/feedback-reply/${replyId}`, 
-        { content: editContent, authorName: "관리자" }, 
-        { headers: getHeaders() }
+      await api.put(`/api/feedback-reply/${replyId}`,
+        { content: editContent, authorName: "관리자" }
       );
       setEditingReplyId(null);
       if (selectedFeedback) handleFeedbackClick(selectedFeedback);
@@ -210,7 +198,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const handleDeleteBoard = async (id: number) => {
     if (!window.confirm("정말로 게시글을 삭제하시겠습니까?")) return;
     try {
-      await api.delete(`/api/board/${id}`, { headers: getHeaders() });
+      await api.delete(`/api/board/${id}`);
       setSelectedBoard(null);
       fetchData(currentPage);
     } catch (err) {
