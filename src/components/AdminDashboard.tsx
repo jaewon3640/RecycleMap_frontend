@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard, MessageSquare, ArrowLeft, 
-  Trash2, MessageCircle, ClipboardList, Send, Edit2, Check, X
+import {
+  LayoutDashboard, MessageSquare, ArrowLeft,
+  Trash2, MessageCircle, ClipboardList, Send, Edit2, Check, X,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import api from '../api';
+
+const PAGE_SIZE = 20;
 
 // ✅ 인터페이스 정의
 interface BoardResponse {
@@ -43,12 +46,17 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
   const [boards, setBoards] = useState<BoardResponse[]>([]);
   const [feedbacks, setFeedbacks] = useState<FeedbackResponse[]>([]);
   const [loading, setLoading] = useState(false);
-  
+
+  // 페이지네이션 상태
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
   // 상세 보기 상태
   const [selectedBoard, setSelectedBoard] = useState<BoardResponse | null>(null);
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackResponse | null>(null);
   const [feedbackReplies, setFeedbackReplies] = useState<FeedbackReplyResponse[]>([]);
-  
+
   // 입력 상태
   const [replyContent, setReplyContent] = useState('');
   const [feedbackReply, setFeedbackReply] = useState('');
@@ -62,16 +70,30 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     return { Authorization: `Bearer ${token}` };
   };
 
-  const fetchData = async () => {
+  const fetchData = async (page: number = 0) => {
     setLoading(true);
     try {
       const headers = getHeaders();
       if (activeTab === 'boards') {
-        const res = await api.get('/api/board/search-name', { headers });
-        setBoards(res.data);
+        const res = await api.get('/api/board/search-name', {
+          headers,
+          params: { page, size: PAGE_SIZE }
+        });
+        const pageData = res.data;
+        setBoards(pageData.content ?? []);
+        setTotalPages(pageData.totalPages ?? 0);
+        setTotalElements(pageData.totalElements ?? 0);
+        setCurrentPage(pageData.number ?? 0);
       } else {
-        const res = await api.get('/api/feedbacks/admin', { headers });
-        setFeedbacks(res.data);
+        const res = await api.get('/api/feedbacks/admin', {
+          headers,
+          params: { page, size: PAGE_SIZE }
+        });
+        const pageData = res.data;
+        setFeedbacks(pageData.content ?? []);
+        setTotalPages(pageData.totalPages ?? 0);
+        setTotalElements(pageData.totalElements ?? 0);
+        setCurrentPage(pageData.number ?? 0);
       }
     } catch (err) {
       console.error("데이터 로딩 실패:", err);
@@ -80,8 +102,21 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchData(page);
+  };
+
+  const getPageNumbers = () => {
+    const delta = 2;
+    const start = Math.max(0, currentPage - delta);
+    const end = Math.min(totalPages - 1, currentPage + delta);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  };
+
   useEffect(() => {
-    fetchData();
+    setCurrentPage(0);
+    fetchData(0);
     setSelectedBoard(null);
     setSelectedFeedback(null);
   }, [activeTab]);
@@ -176,8 +211,8 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     if (!window.confirm("정말로 게시글을 삭제하시겠습니까?")) return;
     try {
       await api.delete(`/api/board/${id}`, { headers: getHeaders() });
-      setBoards(boards.filter(b => b.id !== id));
       setSelectedBoard(null);
+      fetchData(currentPage);
     } catch (err) {
       alert("게시글 삭제 실패");
     }
@@ -318,7 +353,12 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
             <header className="mb-8 flex justify-between items-end">
               <div>
                 <h2 className="text-3xl font-black text-slate-900">{activeTab === 'boards' ? '게시판 관리' : '피드백 관리'}</h2>
-                <p className="text-slate-500 font-medium">RecycleMap 관리자 대시보드</p>
+                <p className="text-slate-500 font-medium">
+                  RecycleMap 관리자 대시보드
+                  {totalElements > 0 && (
+                    <span className="ml-2 text-slate-400">· 총 {totalElements}건</span>
+                  )}
+                </p>
               </div>
             </header>
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
@@ -332,7 +372,15 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {activeTab === 'boards' ? (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-20 text-center text-slate-400">
+                        <div className="flex justify-center">
+                          <div className="w-6 h-6 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : activeTab === 'boards' ? (
                     boards.map(board => (
                       <tr key={board.id} onClick={() => handleBoardClick(board.id)} className="hover:bg-slate-50 cursor-pointer">
                         <td className="px-6 py-4 text-sm font-bold text-slate-400">#{board.id}</td>
@@ -361,6 +409,41 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
                   )}
                 </tbody>
               </table>
+
+              {/* 페이지네이션 */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 py-6 border-t border-slate-100">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 0}
+                    className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-slate-600" />
+                  </button>
+
+                  {getPageNumbers().map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${
+                        page === currentPage
+                          ? 'bg-slate-900 text-white shadow-md'
+                          : 'text-slate-500 hover:bg-slate-100'
+                      }`}
+                    >
+                      {page + 1}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= totalPages - 1}
+                    className="p-2 rounded-xl hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-slate-600" />
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}
