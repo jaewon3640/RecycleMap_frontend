@@ -88,17 +88,14 @@ export function QADetail({ postId, userEmail, onBack }: QADetailProps) {
   const handleDelete = async () => {
     if (!window.confirm("정말로 삭제하시겠습니까?")) return;
     try {
-      await api.delete(`/api/board/${postId}`, { params: { email: userEmail } });
+      await api.delete(`/api/board/${postId}`);
       onBack();
     } catch (error) { alert("삭제 실패"); }
   };
 
   const handleUpdate = async () => {
     try {
-      await api.put(`/api/board/${postId}`, 
-        { title: editTitle, content: editContent }, 
-        { params: { email: userEmail } }
-      );
+      await api.put(`/api/board/${postId}`, { title: editTitle, content: editContent });
       setIsEditing(false);
       fetchData();
     } catch (error) { alert("수정 실패"); }

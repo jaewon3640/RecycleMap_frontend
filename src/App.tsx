@@ -45,8 +45,16 @@ export interface Category {
   description: string; 
 }
 
+function getInitialView(): ViewType {
+  const token = localStorage.getItem('accessToken');
+  const role = localStorage.getItem('userRole');
+  if (!token) return 'login';
+  if (role === 'ADMIN' || role === 'ROLE_ADMIN') return 'admin-dashboard';
+  return 'home';
+}
+
 function App() {
-  const [currentView, setCurrentView] = useState<ViewType>("login");
+  const [currentView, setCurrentView] = useState<ViewType>(getInitialView);
   const [selectedRegion, setSelectedRegion] = useState<Region>({
     id: "suwon-paldal",
     dbId: 1,

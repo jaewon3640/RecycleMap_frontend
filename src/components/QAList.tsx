@@ -29,9 +29,9 @@ export function QAList({ onBack, onSelectPost, onGoToWrite, userEmail }: QAListP
   const fetchPosts = async (titleQuery: string = "", page: number = 0) => {
     setIsLoading(true);
     try {
-      const response = await api.get('/api/board/search-name', {
-        params: { title: titleQuery, page, size: PAGE_SIZE }
-      });
+      const response = titleQuery.trim()
+        ? await api.get('/api/board/search', { params: { title: titleQuery, page, size: PAGE_SIZE } })
+        : await api.get('/api/board', { params: { page, size: PAGE_SIZE } });
 
       // Spring Page 응답: { content: [...], totalPages, totalElements, number, ... }
       const pageData = response.data;
