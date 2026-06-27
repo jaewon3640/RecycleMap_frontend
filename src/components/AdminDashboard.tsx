@@ -69,7 +69,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
     setLoading(true);
     try {
       if (activeTab === 'boards') {
-        const res = await api.get('/api/board/search-name', {
+        const res = await api.get('/api/board', {
           params: { page, size: PAGE_SIZE }
         });
         const pageData = res.data;
